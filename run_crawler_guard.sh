@@ -10,6 +10,15 @@ LOCK=/run/lock/digisteden-crawler-guard.lock
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
+if [ -f /etc/digisteden-crawler-guard/force-apply.lock ]; then
+    mode=$(grep '^MODE=' "$CONFIG" | tail -1 | cut -d= -f2)
+    policy=$(grep '^POLICY_MODE=' "$CONFIG" | tail -1 | cut -d= -f2)
+    if [ "$mode" != "apply" ] || [ "$policy" != "apply" ]; then
+        echo "Apply-only lock rejects MODE=$mode POLICY_MODE=$policy" >&2
+        exit 1
+    fi
+fi
+
 umask 027
 mkdir -p "$STATE"
 JSON_TMP=$(mktemp "$STATE/latest.json.XXXXXX")

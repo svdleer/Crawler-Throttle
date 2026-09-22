@@ -57,3 +57,21 @@ Run once per minute with cron:
 2. Remove an accidental address from the dedicated Cloudflare block rule in the dashboard.
 3. Disable the cron line.
 4. Rotate the Cloudflare API token if it has been exposed.
+
+## Apply-only production lock
+
+Production crawler enforcement is protected by:
+
+```text
+/etc/digisteden-crawler-guard/force-apply.lock
+```
+
+While this root-owned file exists, both `MODE` and `POLICY_MODE` must be `apply` and the controller rejects `--dry-run` before reading or changing policy state.
+
+To explicitly authorize exactly one dry-run, a root operator must create:
+
+```bash
+sudo install -m 0600 -o root -g root /dev/null /etc/digisteden-crawler-guard/allow-dry-run.once
+```
+
+The controller consumes and deletes that file on the next dry-run invocation. Removing `force-apply.lock` disables the apply-only safeguard and should only be done with an explicit operational decision.
